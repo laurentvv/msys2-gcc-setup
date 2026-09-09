@@ -49,22 +49,25 @@ back to coding.
 
 ### Option A — from the release (recommended)
 
-Grab `msys2-gcc-setup-vX.Y.Z.zip` from the [latest release](https://github.com/laurentvv/msys2-gcc-setup/releases/latest) and follow the included `INSTALL.txt`:
+Releases are named after the **GCC version** they ship with (e.g. `gcc-16.2.0`).
+The zip mirrors the MSYS2 root, so installing is a **single extraction** into
+`C:\msys64` (adjust if MSYS2 lives elsewhere):
 
-1. Copy `update-gcc` to `C:\msys64\usr\local\bin\` (create the folder if needed).
-2. Copy `update-gcc.cmd` to `C:\msys64\`.
-3. Optional: double-click `add-to-path.cmd` to call `gcc` from any terminal (see below).
-4. Open an MSYS2 shell (for example the **UCRT64** shortcut) and run `update-gcc`.
+1. Extract the **contents** of [`msys2-gcc-setup.zip`](https://github.com/laurentvv/msys2-gcc-setup/releases/latest/download/msys2-gcc-setup.zip) into `C:\msys64`. You end up with `C:\msys64\usr\local\bin\update-gcc` and the helper scripts at `C:\msys64\`.
+2. Optional: double-click `add-to-path.cmd` to call `gcc` from any terminal (see below).
+3. Open an MSYS2 shell (for example the **UCRT64** shortcut) and run `update-gcc`.
 
-Or do it in one go from **PowerShell**:
+Or in one go from **PowerShell**:
 
 ```powershell
 $msys = "C:\msys64"   # adjust if MSYS2 lives elsewhere
-New-Item -ItemType Directory -Force "$msys\usr\local\bin" | Out-Null
-$base = "https://raw.githubusercontent.com/laurentvv/msys2-gcc-setup/main"
-Invoke-WebRequest "$base/update-gcc"    -OutFile "$msys\usr\local\bin\update-gcc"
-Invoke-WebRequest "$base/update-gcc.cmd" -OutFile "$msys\update-gcc.cmd"
+Invoke-WebRequest "https://github.com/laurentvv/msys2-gcc-setup/releases/latest/download/msys2-gcc-setup.zip" -OutFile "$env:TEMP\msys2-gcc-setup.zip"
+Expand-Archive "$env:TEMP\msys2-gcc-setup.zip" -DestinationPath $msys -Force
 ```
+
+> The asset keeps its stable name `msys2-gcc-setup.zip`, so the
+> `releases/latest/download/...` URL always serves the newest package even
+> though release names follow the GCC version.
 
 ### Option B — from source
 
