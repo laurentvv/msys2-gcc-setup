@@ -14,16 +14,29 @@
 
 </div>
 
-**msys2-gcc-setup** is a small toolkit to **set up and maintain the GCC compiler
-on MSYS2 (Windows)**. It adds MSYS2 to your Windows PATH in one double-click,
-keeps the toolchain at the latest version published in the MSYS2 repositories
-and, after every update, **shows you what's new** — a structured extract of the
-official release notes from [gcc.gnu.org](https://gcc.gnu.org), so you never
-miss a language feature, an optimization, or a breaking change.
+**The only tool that updates GCC on Windows *and* tells you what changed.**
 
-No more stale compilers, no more manual PATH editing, and no more digging
-through changelogs: install once, run one command, read the highlights, get
-back to coding.
+`pacman -Syu` upgrades your compiler silently. Nobody reads the release notes
+afterwards — until a build breaks on a removed flag, a new warning, or a
+changed language default. **msys2-gcc-setup** closes that gap: it keeps GCC on
+MSYS2 at the latest version and, at every update, shows you a readable digest
+of the official release notes from [gcc.gnu.org](https://gcc.gnu.org) — new
+language features, optimizations, breaking changes — with links to the porting
+guide. It also installs by a single zip extraction and makes the compiler
+callable from any terminal.
+
+Honestly: set it up once, then it's just *run one command, read the highlights,
+get back to coding.*
+
+### Why not just `pacman -Syu`?
+
+| | plain pacman | msys2-gcc-setup |
+|---|---|---|
+| Updates the compiler | ✅ | ✅ |
+| Shows you what's new after the update | ❌ | ✅ official highlights digest |
+| Handles UCRT64 / MINGW64 / CLANG64 variants | manual package names | automatic detection |
+| Keeps a readable history (versions + highlights) | ❌ | ✅ `/var/log/gcc-updates.log` |
+| One-zip-extraction install + reversible PATH helper | ❌ | ✅ |
 
 ## ✨ Features
 
