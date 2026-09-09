@@ -9,7 +9,11 @@ Steps
 1. Extract this zip.
 2. Copy `update-gcc`     to `C:\msys64\usr\local\bin\`  (create the folder if needed).
 3. Copy `update-gcc.cmd` to `C:\msys64\`                (adjust if MSYS2 lives elsewhere).
-4. Open an MSYS2 shell (e.g. the UCRT64 shortcut) and run:
+4. Optional — make gcc/pacman callable from ANY terminal (CMD, PowerShell, VS Code):
+   double-click `add-to-path.cmd`
+   (or: powershell -ExecutionPolicy Bypass -File add-to-path.ps1)
+   Idempotent and reversible: undo with remove-from-path.ps1.
+5. Open an MSYS2 shell (e.g. the UCRT64 shortcut) and run:
 
        update-gcc
 

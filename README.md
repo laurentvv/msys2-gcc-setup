@@ -50,7 +50,8 @@ Grab `update-gcc-vX.Y.Z.zip` from the [latest release](https://github.com/lauren
 
 1. Copy `update-gcc` to `C:\msys64\usr\local\bin\` (create the folder if needed).
 2. Copy `update-gcc.cmd` to `C:\msys64\`.
-3. Open an MSYS2 shell (for example the **UCRT64** shortcut) and run `update-gcc`.
+3. Optional: double-click `add-to-path.cmd` to call `gcc` from any terminal (see below).
+4. Open an MSYS2 shell (for example the **UCRT64** shortcut) and run `update-gcc`.
 
 Or do it in one go from **PowerShell**:
 
@@ -69,6 +70,31 @@ git clone https://github.com/laurentvv/update-gcc.git
 cd update-gcc
 copy update-gcc     C:\msys64\usr\local\bin\
 copy update-gcc.cmd C:\msys64\
+```
+
+### Option C — optional: make `gcc` available from any terminal
+
+MSYS2 compilers normally live inside the MSYS2 shells. To also call `gcc`,
+`pacman` or `bash` from CMD, PowerShell or VS Code, add MSYS2 to your
+Windows PATH:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File add-to-path.ps1
+```
+
+or simply double-click `add-to-path.cmd` — both ship in the release zip and end
+up at the MSYS2 root after installation. The script:
+
+- adds `<MSYS2 root>`, `usr\bin` and every **actually installed** toolchain (`ucrt64\bin`, `mingw64\bin`, `clang64\bin`) — empty environment stubs are skipped;
+- **appends** entries at the end of PATH, so Windows built-in tools (`find`, `sort`, `tar`…) always keep priority;
+- is **idempotent** — safe to run again, it skips what is already there;
+- touches your user PATH only (`-Scope Machine` targets all users, from an elevated PowerShell), and preserves the original registry value kind (`REG_EXPAND_SZ`), so `%VAR%`-style entries keep working;
+- broadcasts the settings change, so terminals opened afterwards see it right away — no reboot, no logout.
+
+To undo at any time:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File remove-from-path.ps1
 ```
 
 ## 🖥️ Usage
