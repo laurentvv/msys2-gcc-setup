@@ -35,7 +35,7 @@ get back to coding.*
 | Updates the compiler | ✅ | ✅ |
 | Shows you what's new after the update | ❌ | ✅ official highlights digest |
 | Handles UCRT64 / MINGW64 / CLANG64 variants | manual package names | automatic detection |
-| Keeps a readable history (versions + highlights) | ❌ | ✅ `/var/log/gcc-updates.log` |
+| Keeps a readable history (versions + highlights) | ❌ | ✅ `C:\msys64\var\log\gcc-updates.log` |
 | One-zip-extraction install + reversible PATH helper | ❌ | ✅ |
 
 ## ✨ Features
@@ -45,7 +45,7 @@ get back to coding.*
 - **Always shows the news** — fetches the official *changes* page for the target major version and converts it into a readable summary (caveats, general improvements, C/C++ changes, OpenMP, …).
 - **Multi-environment aware** — detects every GCC variant you have installed: UCRT64, MINGW64, CLANG64 and the MSYS subsystem.
 - **Compiler-only by default** — upgrades the toolchain without touching the rest of your system. Use `--full` if you want a complete `pacman -Syu`.
-- **Update history** — every run (versions old → new, plus the highlights) is appended to `/var/log/gcc-updates.log`.
+- **Update history** — every run (versions old → new, plus the highlights) is appended to `C:\msys64\var\log\gcc-updates.log` (written as `/var/log/gcc-updates.log` inside MSYS2, which maps `/` to the MSYS2 root).
 - **Automation-friendly** — non-interactive and quiet modes, ready for the Windows Task Scheduler.
 - **Zero dependency** — just MSYS2 with its bundled tools (`pacman`, `curl`, `sed`, `awk`). Nothing to install.
 
@@ -179,7 +179,7 @@ available in the log file, so a silent scheduled run is never a missed changelog
 2. **Sync** the repositories (`pacman -Sy`) and compare versions with pacman's own `vercmp`.
 3. **Update** the compiler with `pacman -S` (or `pacman -Syu` with `--full`).
 4. **Show the news**: download `https://gcc.gnu.org/gcc-<major>/changes.html` for each new major version and reformat it (headings, bullet points, links to the porting guide and C++ status page).
-5. **Log** everything to `/var/log/gcc-updates.log`.
+5. **Log** everything to `C:\msys64\var\log\gcc-updates.log`.
 
 | File | Location |
 |---|---|
