@@ -1,0 +1,14 @@
+# Keep line endings sane across platforms
+* text=auto
+
+# Bash scripts must stay LF, or bash chokes on \r
+update-gcc eol=lf
+*.sh eol=lf
+
+# Windows batch files are happiest with CRLF
+*.cmd eol=crlf
+*.bat eol=crlf
+
+# Binary assets
+*.png binary
+*.zip binary

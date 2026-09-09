@@ -1,0 +1,27 @@
+update-gcc vX.Y.Z — installation
+=================================
+
+Keep the GCC compiler on MSYS2 always at the latest version,
+with the official release highlights shown after every update.
+
+Steps
+-----
+1. Extract this zip.
+2. Copy `update-gcc`     to `C:\msys64\usr\local\bin\`  (create the folder if needed).
+3. Copy `update-gcc.cmd` to `C:\msys64\`                (adjust if MSYS2 lives elsewhere).
+4. Open an MSYS2 shell (e.g. the UCRT64 shortcut) and run:
+
+       update-gcc
+
+   - `--check` : check only, install nothing
+   - `--news`  : show the highlights of the installed version
+   - `--yes`   : non-interactive (for schedulers)
+
+Automate it (every Monday at 07:00)
+-----------------------------------
+    schtasks /Create /TN "Update GCC" /SC WEEKLY /D MON /ST 07:00 /TR "C:\msys64\update-gcc.cmd --yes --quiet"
+
+History of updates and highlights: C:\msys64\var\log\gcc-updates.log
+
+Full documentation: https://github.com/laurentvv/update-gcc#readme
+License: MIT

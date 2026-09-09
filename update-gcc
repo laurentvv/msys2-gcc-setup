@@ -1,0 +1,188 @@
+#!/bin/bash
+# =============================================================================
+#  update-gcc — Met le compilateur GCC à la dernière version disponible dans
+#               les dépôts MSYS2 et affiche systématiquement les nouveautés
+#               de la nouvelle version (extrait de gcc.gnu.org).
+#
+#  Usage :
+#     update-gcc             Vérifie puis met à jour GCC si besoin + nouveautés
+#     update-gcc --check     Simple vérification, rien n'est installé
+#     update-gcc --news      Affiche les nouveautés de la version installée
+#     update-gcc --full      Met à jour tout le système (pacman -Syu)
+#     update-gcc --yes       Sans confirmation interactive (planificateur)
+#     update-gcc --quiet     Silencieux, sauf si une mise à jour a lieu
+#
+#  Chaque exécution est journalisée dans /var/log/gcc-updates.log
+#
+#  Planification hebdomadaire sous Windows (chaque lundi à 07:00) :
+#     schtasks /Create /TN "Mise a jour GCC" /SC WEEKLY /D MON /ST 07:00 /TR "C:\msys64\update-gcc.cmd"
+# =============================================================================
+set -u
+
+LOG_FILE="/var/log/gcc-updates.log"
+CHANGES_URL="https://gcc.gnu.org/gcc-%s/changes.html"
+PORTING_URL="https://gcc.gnu.org/gcc-%s/porting_to.html"
+CXX_URL="https://gcc.gnu.org/gcc-%s/cxx-status.html"
+EXCERPT_LINES=80
+
+QUIET=0 CHECK_ONLY=0 NEWS_ONLY=0 ASSUME_YES=0 FULL_UPGRADE=0
+for arg in "$@"; do
+  case "$arg" in
+    --check) CHECK_ONLY=1 ;;
+    --news)  NEWS_ONLY=1 ;;
+    --yes|-y) ASSUME_YES=1 ;;
+    --full)  FULL_UPGRADE=1 ;;
+    --quiet|-q) QUIET=1 ;;
+    -h|--help) sed -n '2,24p' "$0" | sed 's/^# \{0,2\}//'; exit 0 ;;
+    *) printf 'Option inconnue : %s (voir --help)\n' "$arg" >&2; exit 2 ;;
+  esac
+done
+
+say()  { [ "$QUIET" -eq 0 ] && printf '%s\n' "$*"; return 0; }
+warn() { printf 'AVERTISSEMENT : %s\n' "$*" >&2; }
+die()  { printf 'ERREUR : %s\n' "$*" >&2; exit 1; }
+
+command -v pacman >/dev/null 2>&1 ||
+  die "pacman introuvable. Lancez ce script dans un shell MSYS2 (pas Git Bash) : C:\\msys64\\msys2.exe"
+
+if command -v vercmp >/dev/null 2>&1; then
+  is_newer() { [ "$(vercmp "$1" "$2")" -gt 0 ]; }   # vrai si $1 > $2
+else
+  is_newer() { [ "$1" != "$2" ]; }                  # repli : les dépôts ne font que monter
+fi
+
+# --- Compilateurs GCC installés, toutes variantes (ucrt64, mingw64, clang64, msys) ---
+mapfile -t GCC_PKGS < <(pacman -Qq 2>/dev/null | grep -E '^(mingw-w64-[a-z0-9_-]+-gcc|gcc)$')
+[ ${#GCC_PKGS[@]} -gt 0 ] ||
+  die "aucun paquet GCC installé. Exemple : pacman -S mingw-w64-ucrt-x86_64-gcc"
+
+pkg_version()  { pacman -Qi "$1" 2>/dev/null | sed -n 's/^Version[[:space:]]*:[[:space:]]*//p'; }
+repo_version() { pacman -Si "$1" 2>/dev/null | sed -n 's/^Version[[:space:]]*:[[:space:]]*//p' | head -n 1; }
+
+# --- Nouveautés : reformate la page officielle des changements en texte ---
+fetch_news() {  # $1 = version majeure (ex. 17)
+  local major="$1" url tmp
+  url="$(printf "$CHANGES_URL" "$major")"
+  tmp="$(mktemp)"
+  if curl -fsSL --max-time 60 "$url" -o "$tmp" 2>/dev/null; then
+    sed -e 's/<h1[^>]*>/\n# /g' -e 's/<h2[^>]*>/\n## /g' -e 's/<li[^>]*>/\n• /g' \
+        -e 's/&nbsp;/ /g; s/&amp;/\&/g; s/&lt;/</g; s/&gt;/>/g; s/&quot;/"/g; s/&#39;/'"'"'/g; s/&mdash;/—/g; s/&ndash;/–/g' "$tmp" \
+      | tr -s ' \t' ' ' \
+      | awk '{ sub(/^[ \t]+/,"") }
+             /^(# |## |• )/ { if (b) print b; b = $0; next }
+             /^$/           { if (b) print b; b = ""; next }
+             { b = b " " $0 }
+             END { if (b) print b }' \
+      | sed -z -e 's/<!--[^>]*-->/ /g' -e 's/<[^>]*>/ /g' \
+      | awk '/^# /{keep=1} keep' \
+      | sed -e 's/^[[:space:]]*//' -e '/^$/d' \
+      | head -n "$EXCERPT_LINES"
+  else
+    printf '(impossible de télécharger la page des changements)\n'
+  fi
+  rm -f "$tmp"
+  printf '\nLiens utiles pour GCC %s :\n' "$major"
+  printf '  • Tous les changements : %s\n' "$url"
+  printf '  • Guide de migration  : %s\n' "$(printf "$PORTING_URL" "$major")"
+  printf '  • Support du C++      : %s\n' "$(printf "$CXX_URL" "$major")"
+}
+
+# --- Mode --news : nouveautés de la version installée, sans rien toucher ---
+if [ "$NEWS_ONLY" -eq 1 ]; then
+  cur="$(pkg_version "${GCC_PKGS[0]}")"
+  say "=== Nouveautés GCC ${cur%%.*} (version installée : $cur) ==="
+  fetch_news "${cur%%.*}"
+  exit 0
+fi
+
+say "=== Mise à jour du compilateur GCC — $(date '+%d/%m/%Y %H:%M') ==="
+
+say "• Synchronisation des dépôts MSYS2…"
+pacman -Sy >/dev/null 2>&1 ||
+  die "échec de la synchronisation (réseau indisponible, ou un autre pacman est en cours ?)."
+
+# --- Compare chaque compilateur installé à la version du dépôt ---
+UPDATES=()   # entrées "paquet|ancienne|nouvelle"
+for pkg in "${GCC_PKGS[@]}"; do
+  cur="$(pkg_version "$pkg")"
+  cand="$(repo_version "$pkg")"
+  [ -n "$cand" ] || die "le paquet $pkg n'existe plus dans les dépôts."
+  if [ "$cur" = "$cand" ]; then
+    say "• $pkg : déjà à jour ($cur)."
+  elif is_newer "$cand" "$cur"; then
+    say "• $pkg : mise à jour disponible $cur → $cand"
+    UPDATES+=("$pkg|$cur|$cand")
+  else
+    say "• $pkg : locale ($cur) plus récente que le dépôt ($cand), rien à faire."
+  fi
+done
+
+if [ ${#UPDATES[@]} -eq 0 ]; then
+  say "✔ Le compilateur est déjà à la dernière version disponible."
+  echo "==== $(date '+%Y-%m-%d %H:%M') — vérification : GCC déjà à jour ====" >> "$LOG_FILE" 2>/dev/null
+  exit 0
+fi
+
+# Versions majeures concernées → une seule page de nouveautés par version
+MAJORS=()
+for u in "${UPDATES[@]}"; do
+  IFS='|' read -r _ _ new <<< "$u"
+  m="${new%%.*}"
+  [[ " ${MAJORS[*]-} " == *" $m "* ]] || MAJORS+=("$m")
+done
+
+if [ "$CHECK_ONLY" -eq 1 ]; then
+  say "✔ Mode vérification : rien n'a été installé. Nouveautés à venir :"
+  echo "==== $(date '+%Y-%m-%d %H:%M') — vérification : mise à jour disponible ====" >> "$LOG_FILE" 2>/dev/null
+  for m in "${MAJORS[@]}"; do
+    say ""
+    say "────────── Nouveautés GCC $m ──────────"
+    fetch_news "$m" >> "$LOG_FILE" 2>/dev/null
+    fetch_news "$m"
+  done
+  exit 0
+fi
+
+# --- Installation ---
+if [ "$FULL_UPGRADE" -eq 1 ]; then
+  say "• Mise à jour complète du système (pacman -Syu)…"
+  args=(--needed)
+else
+  say "• Installation de la nouvelle version du compilateur…"
+  args=()
+fi
+[ "$ASSUME_YES" -eq 1 ] && args+=(--noconfirm)
+
+if [ "$FULL_UPGRADE" -eq 1 ]; then
+  pacman -Syu "${args[@]}" || die "la mise à jour a échoué. Relancez MSYS2 en tant qu'administrateur."
+else
+  pkgs=()
+  for u in "${UPDATES[@]}"; do
+    IFS='|' read -r p _ _ <<< "$u"
+    pkgs+=("$p")
+  done
+  pacman -S "${args[@]}" "${pkgs[@]}" ||
+    die "la mise à jour a échoué. Relancez MSYS2 en tant qu'administrateur."
+fi
+
+say ""
+say "✔ Mise à jour terminée."
+REPORT="==== $(date '+%Y-%m-%d %H:%M') — mise à jour du compilateur ===="
+for u in "${UPDATES[@]}"; do
+  IFS='|' read -r pkg old new <<< "$u"
+  now="$(pkg_version "$pkg")"
+  say "• $pkg : $old → $now"
+  REPORT+=$'\n'"$pkg : $old → $now"
+done
+
+for m in "${MAJORS[@]}"; do
+  say ""
+  say "────────── Nouveautés GCC $m ──────────"
+  REPORT+=$'\n'"Nouveautés GCC $m :"$'\n'"$(fetch_news "$m")"
+  fetch_news "$m"
+done
+
+REPORT+=$'\n'"------------------------------------------------------------"
+printf '%s\n\n' "$REPORT" >> "$LOG_FILE" 2>/dev/null ||
+  warn "journal non écrit dans $LOG_FILE."
+say "Historique complet : $LOG_FILE"
