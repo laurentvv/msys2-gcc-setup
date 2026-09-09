@@ -1,4 +1,4 @@
-update-gcc vX.Y.Z — installation
+msys2-gcc-setup vX.Y.Z — installation
 =================================
 
 Keep the GCC compiler on MSYS2 always at the latest version,
@@ -27,5 +27,5 @@ Automate it (every Monday at 07:00)
 
 History of updates and highlights: C:\msys64\var\log\gcc-updates.log
 
-Full documentation: https://github.com/laurentvv/update-gcc#readme
+Full documentation: https://github.com/laurentvv/msys2-gcc-setup#readme
 License: MIT

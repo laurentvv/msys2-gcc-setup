@@ -61,7 +61,7 @@ def main():
     img = glow(img, 1500, -40, 300, (31, 111, 235), 80)
     d = ImageDraw.Draw(img)
 
-    f_title = font("mono_b", 96)
+    f_title = font("mono_b", 76)
     f_tag = font("ui_b", 34)
     f_sub = font("ui", 27)
     f_chip = font("ui_b", 22)
@@ -69,10 +69,10 @@ def main():
     f_term_b = font("mono_b", 24)
 
     # ---- left column -----------------------------------------------------
-    x, y = 80, 104
+    x, y = 80, 112
     d.text((x, y), "$", font=f_title, fill=GREEN)
-    d.text((x + d.textlength("$", font=f_title) + 14, y), "update-gcc", font=f_title, fill=FG)
-    y += 148
+    d.text((x + d.textlength("$", font=f_title) + 14, y), "msys2-gcc-setup", font=f_title, fill=FG)
+    y += 122
     d.text((x, y), "Keep GCC on MSYS2 always up to date.", font=f_tag, fill=FG)
     y += 56
     d.text((x, y), "Official release highlights after every update.", font=f_sub, fill=DIM)

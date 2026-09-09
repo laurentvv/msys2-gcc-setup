@@ -1,30 +1,33 @@
-# update-gcc
+# msys2-gcc-setup
 
 <div align="center">
-  <img src="assets/banner.png" alt="update-gcc — keep GCC on MSYS2 always up to date" width="100%">
+  <img src="assets/banner.png" alt="msys2-gcc-setup — set up GCC on MSYS2 and keep it always up to date" width="100%">
 </div>
 
 <div align="center">
 
-[![Release](https://img.shields.io/github/v/release/laurentvv/update-gcc?logo=github)](https://github.com/laurentvv/update-gcc/releases/latest)
-[![License: MIT](https://img.shields.io/github/license/laurentvv/update-gcc)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/laurentvv/msys2-gcc-setup?logo=github)](https://github.com/laurentvv/msys2-gcc-setup/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/laurentvv/msys2-gcc-setup)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078d6?logo=windows11&logoColor=white)
 ![Shell](https://img.shields.io/badge/shell-Bash-4EAA25?logo=gnu-bash&logoColor=white)
 ![Toolchain](https://img.shields.io/badge/MSYS2-UCRT64%20%2F%20MINGW64%20%2F%20CLANG64-brown)
 
 </div>
 
-**update-gcc** is a one-command updater for the **GCC compiler on MSYS2 (Windows)**.
-It keeps your toolchain at the latest version published in the MSYS2 repositories and,
-after every update, **shows you what's new** — a structured extract of the official
-release notes from [gcc.gnu.org](https://gcc.gnu.org), so you never miss a language
-feature, an optimization, or a breaking change.
+**msys2-gcc-setup** is a small toolkit to **set up and maintain the GCC compiler
+on MSYS2 (Windows)**. It adds MSYS2 to your Windows PATH in one double-click,
+keeps the toolchain at the latest version published in the MSYS2 repositories
+and, after every update, **shows you what's new** — a structured extract of the
+official release notes from [gcc.gnu.org](https://gcc.gnu.org), so you never
+miss a language feature, an optimization, or a breaking change.
 
-No more stale compilers, and no more digging through changelogs: run one command,
-read the highlights, get back to coding.
+No more stale compilers, no more manual PATH editing, and no more digging
+through changelogs: install once, run one command, read the highlights, get
+back to coding.
 
 ## ✨ Features
 
+- **One-double-click setup** — `add-to-path` makes `gcc`, `pacman` and `bash` callable from any terminal (CMD, PowerShell, VS Code...), reversibly, without shadowing Windows built-ins.
 - **Always up to date** — compares your installed GCC against the MSYS2 repositories (`pacman -Sy` + `vercmp`) and upgrades only when a newer version exists.
 - **Always shows the news** — fetches the official *changes* page for the target major version and converts it into a readable summary (caveats, general improvements, C/C++ changes, OpenMP, …).
 - **Multi-environment aware** — detects every GCC variant you have installed: UCRT64, MINGW64, CLANG64 and the MSYS subsystem.
@@ -46,7 +49,7 @@ read the highlights, get back to coding.
 
 ### Option A — from the release (recommended)
 
-Grab `update-gcc-vX.Y.Z.zip` from the [latest release](https://github.com/laurentvv/update-gcc/releases/latest) and follow the included `INSTALL.txt`:
+Grab `msys2-gcc-setup-vX.Y.Z.zip` from the [latest release](https://github.com/laurentvv/msys2-gcc-setup/releases/latest) and follow the included `INSTALL.txt`:
 
 1. Copy `update-gcc` to `C:\msys64\usr\local\bin\` (create the folder if needed).
 2. Copy `update-gcc.cmd` to `C:\msys64\`.
@@ -58,7 +61,7 @@ Or do it in one go from **PowerShell**:
 ```powershell
 $msys = "C:\msys64"   # adjust if MSYS2 lives elsewhere
 New-Item -ItemType Directory -Force "$msys\usr\local\bin" | Out-Null
-$base = "https://raw.githubusercontent.com/laurentvv/update-gcc/main"
+$base = "https://raw.githubusercontent.com/laurentvv/msys2-gcc-setup/main"
 Invoke-WebRequest "$base/update-gcc"    -OutFile "$msys\usr\local\bin\update-gcc"
 Invoke-WebRequest "$base/update-gcc.cmd" -OutFile "$msys\update-gcc.cmd"
 ```
@@ -66,8 +69,8 @@ Invoke-WebRequest "$base/update-gcc.cmd" -OutFile "$msys\update-gcc.cmd"
 ### Option B — from source
 
 ```powershell
-git clone https://github.com/laurentvv/update-gcc.git
-cd update-gcc
+git clone https://github.com/laurentvv/msys2-gcc-setup.git
+cd msys2-gcc-setup
 copy update-gcc     C:\msys64\usr\local\bin\
 copy update-gcc.cmd C:\msys64\
 ```
